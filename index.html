@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fund · 垫资交易明细 · ShopifyPayment</title>
+  <style>
+    :root {
+      --bg: #f0f2f5;
+      --card: #ffffff;
+      --border: #f0f0f0;
+      --border-strong: #d9d9d9;
+      --text: rgba(0, 0, 0, 0.85);
+      --text-secondary: rgba(0, 0, 0, 0.45);
+      --primary: #1890ff;
+      --primary-hover: #40a9ff;
+      --success: #52c41a;
+      --danger: #ff4d4f;
+      --header-h: 48px;
+      --radius: 2px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .layout { min-height: 100vh; display: flex; flex-direction: column; }
+
+    .topbar {
+      height: var(--header-h);
+      background: #001529;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 24px;
+    }
+    .logo { font-weight: 700; letter-spacing: 0.5px; }
+    .top-nav { display: flex; gap: 8px; }
+    .top-nav span {
+      padding: 6px 12px;
+      border-radius: 4px;
+      opacity: 0.75;
+      cursor: default;
+    }
+    .top-nav .active { background: var(--primary); opacity: 1; }
+
+    .page { padding: 16px 24px 32px; flex: 1; }
+
+    .breadcrumb {
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+    .breadcrumb b { color: var(--text); font-weight: 500; }
+
+    .page-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-strong);
+      background: transparent;
+    }
+    .page-tab {
+      padding: 10px 16px;
+      border: 1px solid var(--border-strong);
+      border-bottom: none;
+      background: #fafafa;
+      border-radius: 4px 4px 0 0;
+      margin-right: 4px;
+      color: var(--text);
+      cursor: default;
+    }
+    .page-tab.active {
+      background: #fff;
+      color: var(--primary);
+      position: relative;
+      z-index: 1;
+      margin-bottom: -1px;
+      padding-bottom: 11px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 4px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px 24px;
+      align-items: end;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .field label { color: var(--text); font-size: 14px; }
+    .field input,
+    .field select {
+      height: 32px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      padding: 4px 11px;
+      outline: none;
+      background: #fff;
+      width: 100%;
+      color: var(--text);
+    }
+    .field input:focus,
+    .field select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2); }
+    .field input::placeholder { color: #bfbfbf; }
+
+    .field-actions {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      justify-content: flex-start;
+      padding-bottom: 0;
+    }
+
+    .btn {
+      height: 32px;
+      padding: 0 15px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-strong);
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .btn:hover { color: var(--primary); border-color: var(--primary); }
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: #fff; }
+    .btn-link {
+      border: none;
+      background: transparent;
+      color: var(--text);
+      padding: 0 8px;
+    }
+    .btn-link:hover { color: var(--primary); }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .platform-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      flex: 1;
+      min-width: 0;
+    }
+    .platform-tab {
+      padding: 12px 16px;
+      cursor: pointer;
+      color: var(--text);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      user-select: none;
+    }
+    .platform-tab:hover { color: var(--primary); }
+    .platform-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 500;
+    }
+
+    .toolbar-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1600px;
+    }
+    th, td {
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+    th {
+      background: #fafafa;
+      color: var(--text);
+      font-weight: 500;
+      position: sticky;
+      top: 0;
+    }
+    tbody tr:hover { background: #fafafa; }
+
+    .amount-pos { color: var(--success); font-variant-numeric: tabular-nums; }
+    .amount-neg { color: var(--danger); font-variant-numeric: tabular-nums; }
+    .muted { color: var(--text-secondary); }
+
+    .status {
+      display: inline-block;
+      padding: 0 7px;
+      border-radius: 2px;
+      font-size: 12px;
+      line-height: 20px;
+      border: 1px solid transparent;
+    }
+    .status-pending { color: #d48806; background: #fffbe6; border-color: #ffe58f; }
+    .status-paid { color: #389e0d; background: #f6ffed; border-color: #b7eb8f; }
+    .status-in_transit { color: #096dd9; background: #e6f7ff; border-color: #91d5ff; }
+
+    .pagination {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    .page-btn {
+      min-width: 32px;
+      height: 32px;
+      border: 1px solid var(--border-strong);
+      background: #fff;
+      border-radius: var(--radius);
+      cursor: default;
+    }
+    .page-btn.active {
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .toast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 4px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 1000;
+    }
+    .toast.show { opacity: 1; }
+
+    @media (max-width: 1200px) {
+      .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <header class="topbar">
+      <div class="logo">Fund</div>
+      <nav class="top-nav">
+        <span>首页</span>
+        <span class="active">垫资</span>
+        <span>风控</span>
+        <span>系统</span>
+      </nav>
+    </header>
+
+    <main class="page">
+      <div class="breadcrumb">Fund &gt; 垫资业务 &gt; <b>垫资交易明细</b></div>
+
+      <div class="page-tabs">
+        <div class="page-tab active">垫资交易明细</div>
+      </div>
+
+      <section class="card">
+        <div class="filter-grid" id="filterGrid">
+          <!-- filled by JS per tab -->
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="toolbar">
+          <div class="platform-tabs" id="platformTabs"></div>
+          <div class="toolbar-actions">
+            <button class="btn" id="lastSyncBtn" type="button">最近同步</button>
+            <button class="btn btn-primary" id="syncBtn" type="button">流水同步</button>
+            <button class="btn btn-primary" id="exportBtn" type="button">⬇ 导出数据</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <span id="totalText">共 0 条</span>
+          <button class="page-btn active" type="button">1</button>
+          <button class="page-btn" type="button">2</button>
+          <button class="page-btn" type="button">›</button>
+          <span>10 条/页</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const platforms = ["Airwallex", "PingPong", "PayPal", "OceanPayment", "ShopifyPayment"];
+    let activePlatform = "ShopifyPayment";
+
+    const legacyColumns = [
+      { key: "platform", label: "支付平台" },
+      { key: "alias", label: "账户别名" },
+      { key: "orderId", label: "Order ID" },
+      { key: "time", label: "交易时间(UTC+8)" },
+      { key: "type", label: "类型" },
+      { key: "currency", label: "交易币种" },
+      { key: "amount", label: "交易金额", kind: "pos" },
+      { key: "fee", label: "手续费", kind: "neg" },
+      { key: "payerName", label: "付款方名称" },
+      { key: "payerAccount", label: "付款方账号" },
+    ];
+
+    const shopifyColumns = [
+      { key: "platform", label: "支付平台" },
+      { key: "alias", label: "账户别名" },
+      { key: "order", label: "Shopify订单号" },
+      { key: "transactionDate", label: "交易时间" },
+      { key: "type", label: "交易类型" },
+      { key: "currency", label: "结算币种" },
+      { key: "amount", label: "交易金额", kind: "pos" },
+      { key: "fee", label: "手续费", kind: "neg" },
+      { key: "net", label: "净收入金额", kind: "pos" },
+      { key: "cardBrand", label: "卡品牌" },
+      { key: "cardSource", label: "支付来源" },
+      { key: "payoutStatus", label: "打款状态", kind: "status" },
+      { key: "payoutDate", label: "预计打款日期" },
+      { key: "payoutId", label: "打款批次ID" },
+      { key: "availableOn", label: "可用日期" },
+      { key: "checkout", label: "Checkout交易编号" },
+      { key: "paymentMethodName", label: "支付方式" },
+      { key: "presentmentAmount", label: "展示金额" },
+      { key: "presentmentCurrency", label: "展示币种" },
+    ];
+
+    const legacyMock = {
+      Airwallex: [
+        {
+          platform: "Airwallex",
+          alias: "Airwallex-US-主账户",
+          orderId: "int_hkdmldd4jgob8m1vo",
+          time: "2026-08-09 23:04:00",
+          type: "Payment",
+          currency: "USD",
+          amount: "29.98",
+          fee: "-1.32",
+          payerName: "Sharon Wilson",
+          payerAccount: "-",
+        },
+        {
+          platform: "Airwallex",
+          alias: "Airwallex-US-主账户",
+          orderId: "int_hkdmldd4k9ob8m20e",
+          time: "2026-08-09 23:04:00",
+          type: "Payment Reserve Release",
+          currency: "USD",
+          amount: "1.50",
+          fee: "0.00",
+          payerName: "-",
+          payerAccount: "-",
+        },
+      ],
+      PingPong: [
+        {
+          platform: "PingPong",
+          alias: "PingPong-EU",
+          orderId: "PP20260809001",
+          time: "2026-08-08 18:22:11",
+          type: "Payment",
+          currency: "EUR",
+          amount: "86.40",
+          fee: "-2.59",
+          payerName: "Anna Becker",
+          payerAccount: "-",
+        },
+      ],
+      PayPal: [
+        {
+          platform: "PayPal",
+          alias: "PayPal-Global",
+          orderId: "5XY12345AB678901C",
+          time: "2026-08-07 10:15:43",
+          type: "Sale",
+          currency: "USD",
+          amount: "120.00",
+          fee: "-4.08",
+          payerName: "James Brown",
+          payerAccount: "buyer@example.com",
+        },
+      ],
+      OceanPayment: [
+        {
+          platform: "OceanPayment",
+          alias: "Ocean-HK",
+          orderId: "OP20260806088",
+          time: "2026-08-06 09:41:20",
+          type: "Capture",
+          currency: "HKD",
+          amount: "780.00",
+          fee: "-23.40",
+          payerName: "Li Wei",
+          payerAccount: "-",
+        },
+      ],
+    };
+
+    const shopifyMock = [
+      {
+        platform: "shopify",
+        alias: "Shopify-UK-主店",
+        transactionDate: "2026-07-20 19:41:59 +0200",
+        type: "charge",
+        order: "#21880",
+        cardBrand: "visa",
+        cardSource: "online",
+        payoutStatus: "待打款",
+        payoutDate: "2026-07-27",
+        payoutId: "-",
+        availableOn: "2026-07-26",
+        amount: "558.80",
+        fee: "33.98",
+        net: "524.82",
+        checkout: "#33724244951097",
+        paymentMethodName: "card",
+        presentmentAmount: "53.11",
+        presentmentCurrency: "GBP",
+        currency: "HKD",
+      },
+      {
+        platform: "shopify",
+        alias: "Shopify-UK-主店",
+        transactionDate: "2026-07-21 11:08:22 +0200",
+        type: "charge",
+        order: "#21891",
+        cardBrand: "master",
+        cardSource: "online",
+        payoutStatus: "打款中",
+        payoutDate: "2026-07-28",
+        payoutId: "po_9A1B2C3D",
+        availableOn: "2026-07-27",
+        amount: "326.50",
+        fee: "19.59",
+        net: "306.91",
+        checkout: "#33724245012884",
+        paymentMethodName: "card",
+        presentmentAmount: "31.20",
+        presentmentCurrency: "GBP",
+        currency: "HKD",
+      },
+      {
+        platform: "shopify",
+        alias: "Shopify-UK-主店",
+        transactionDate: "2026-07-22 16:33:05 +0800",
+        type: "refund",
+        order: "#21855",
+        cardBrand: "visa",
+        cardSource: "online",
+        payoutStatus: "已打款",
+        payoutDate: "2026-07-24",
+        payoutId: "po_7F8E9D0C",
+        availableOn: "2026-07-23",
+        amount: "-128.00",
+        fee: "-3.84",
+        net: "-124.16",
+        checkout: "#33724243881201",
+        paymentMethodName: "card",
+        presentmentAmount: "-12.20",
+        presentmentCurrency: "GBP",
+        currency: "HKD",
+      },
+      {
+        platform: "shopify",
+        alias: "Shopify-US-Outlet",
+        transactionDate: "2026-07-23 09:15:48 +0000",
+        type: "charge",
+        order: "#21902",
+        cardBrand: "amex",
+        cardSource: "online",
+        payoutStatus: "待打款",
+        payoutDate: "2026-07-30",
+        payoutId: "-",
+        availableOn: "2026-07-29",
+        amount: "890.00",
+        fee: "44.50",
+        net: "845.50",
+        checkout: "#33724246100377",
+        paymentMethodName: "card",
+        presentmentAmount: "112.50",
+        presentmentCurrency: "USD",
+        currency: "HKD",
+      },
+      {
+        platform: "shopify",
+        alias: "Shopify-UK-主店",
+        transactionDate: "2026-07-24 21:02:11 +0200",
+        type: "adjustment",
+        order: "-",
+        cardBrand: "-",
+        cardSource: "-",
+        payoutStatus: "已打款",
+        payoutDate: "2026-07-25",
+        payoutId: "po_ADJ20260725",
+        availableOn: "2026-07-25",
+        amount: "12.00",
+        fee: "0.00",
+        net: "12.00",
+        checkout: "-",
+        paymentMethodName: "-",
+        presentmentAmount: "12.00",
+        presentmentCurrency: "HKD",
+        currency: "HKD",
+      },
+      {
+        platform: "shopify",
+        alias: "Shopify-US-Outlet",
+        transactionDate: "2026-07-25 14:47:39 +0800",
+        type: "charge",
+        order: "#21918",
+        cardBrand: "visa",
+        cardSource: "online",
+        payoutStatus: "打款中",
+        payoutDate: "2026-08-01",
+        payoutId: "po_4K5L6M7N",
+        availableOn: "2026-07-31",
+        amount: "215.60",
+        fee: "12.94",
+        net: "202.66",
+        checkout: "#33724247221990",
+        paymentMethodName: "card",
+        presentmentAmount: "198.00",
+        presentmentCurrency: "CNY",
+        currency: "HKD",
+      },
+      {
+        platform: "shopify",
+        alias: "Shopify-UK-主店",
+        transactionDate: "2026-07-26 08:19:03 +0200",
+        type: "charge",
+        order: "#21927",
+        cardBrand: "master",
+        cardSource: "online",
+        payoutStatus: "待打款",
+        payoutDate: "2026-08-02",
+        payoutId: "-",
+        availableOn: "2026-08-01",
+        amount: "74.20",
+        fee: "4.45",
+        net: "69.75",
+        checkout: "#33724248004412",
+        paymentMethodName: "card",
+        presentmentAmount: "7.10",
+        presentmentCurrency: "GBP",
+        currency: "HKD",
+      },
+      {
+        platform: "shopify",
+        alias: "Shopify-UK-主店",
+        transactionDate: "2026-07-27 19:55:27 +0000",
+        type: "refund",
+        order: "#21891",
+        cardBrand: "master",
+        cardSource: "online",
+        payoutStatus: "已打款",
+        payoutDate: "2026-07-29",
+        payoutId: "po_9A1B2C3D",
+        availableOn: "2026-07-28",
+        amount: "-56.00",
+        fee: "-1.68",
+        net: "-54.32",
+        checkout: "#33724245012884",
+        paymentMethodName: "card",
+        presentmentAmount: "-5.35",
+        presentmentCurrency: "GBP",
+        currency: "HKD",
+      },
+    ];
+
+    const lastSyncMap = {
+      Airwallex: "2026-08-10 14:52:01",
+      PingPong: "2026-08-10 13:10:22",
+      PayPal: "2026-08-10 12:05:48",
+      OceanPayment: "2026-08-10 11:40:16",
+      ShopifyPayment: "2026-08-10 15:18:33",
+    };
+
+    function toast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 1800);
+    }
+
+    function renderTabs() {
+      const wrap = document.getElementById("platformTabs");
+      wrap.innerHTML = platforms
+        .map(
+          (p) =>
+            `<div class="platform-tab ${p === activePlatform ? "active" : ""}" data-platform="${p}">${p}</div>`
+        )
+        .join("");
+
+      wrap.querySelectorAll(".platform-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          activePlatform = tab.dataset.platform;
+          render();
+        });
+      });
+    }
+
+    function renderFilters() {
+      const grid = document.getElementById("filterGrid");
+      if (activePlatform === "ShopifyPayment") {
+        grid.innerHTML = `
+          <div class="field">
+            <label>账户别名</label>
+            <select><option value="">请选择</option><option>Shopify-UK-主店</option><option>Shopify-US-Outlet</option></select>
+          </div>
+          <div class="field">
+            <label>交易时间</label>
+            <input type="text" value="2026-07-01 → 2026-08-01" />
+          </div>
+          <div class="field">
+            <label>Shopify订单号</label>
+            <input type="text" placeholder="如 #21880" />
+          </div>
+          <div class="field">
+            <label>Checkout交易编号</label>
+            <input type="text" placeholder="请输入" />
+          </div>
+          <div class="field">
+            <label>交易类型</label>
+            <select><option value="">请选择</option><option>charge</option><option>refund</option><option>adjustment</option></select>
+          </div>
+          <div class="field">
+            <label>打款状态</label>
+            <select><option value="">请选择</option><option>待打款</option><option>打款中</option><option>已打款</option></select>
+          </div>
+          <div class="field">
+            <label>结算币种</label>
+            <select><option value="">请选择</option><option>HKD</option><option>USD</option><option>GBP</option></select>
+          </div>
+          <div class="field">
+            <label>支付方式</label>
+            <select><option value="">请选择</option><option>card</option></select>
+          </div>
+          <div class="field">
+            <label>交易金额(最小金额)</label>
+            <input type="text" placeholder="请输入" />
+          </div>
+          <div class="field">
+            <label>交易金额(最大金额)</label>
+            <input type="text" placeholder="请输入" />
+          </div>
+          <div class="field">
+            <label>卡品牌</label>
+            <select><option value="">请选择</option><option>visa</option><option>master</option><option>amex</option></select>
+          </div>
+          <div class="field-actions">
+            <button class="btn btn-primary" type="button" id="searchBtn">搜索</button>
+            <button class="btn" type="button" id="resetBtn">重置</button>
+          </div>
+        `;
+      } else {
+        grid.innerHTML = `
+          <div class="field">
+            <label>账户别名</label>
+            <select><option value="">请选择</option></select>
+          </div>
+          <div class="field">
+            <label>交易时间</label>
+            <input type="text" value="2026-07-01 → 2026-08-01" />
+          </div>
+          <div class="field">
+            <label>交易ID</label>
+            <input type="text" placeholder="请输入" />
+          </div>
+          <div class="field">
+            <label>交易金额(最小金额)</label>
+            <input type="text" placeholder="请输入" />
+          </div>
+          <div class="field">
+            <label>交易金额(最大金额)</label>
+            <input type="text" placeholder="请输入" />
+          </div>
+          <div class="field">
+            <label>交易币种</label>
+            <select><option value="">请选择</option><option>USD</option><option>EUR</option><option>HKD</option></select>
+          </div>
+          <div class="field">
+            <label>付款方名称</label>
+            <input type="text" placeholder="请输入" />
+          </div>
+          <div class="field">
+            <label>付款方账号</label>
+            <input type="text" placeholder="请输入" />
+          </div>
+          <div class="field">
+            <label>类型</label>
+            <select><option value="">请选择</option></select>
+          </div>
+          <div class="field">
+            <label>二级类型</label>
+            <select><option value="">请选择</option></select>
+          </div>
+          <div class="field-actions">
+            <button class="btn btn-primary" type="button" id="searchBtn">搜索</button>
+            <button class="btn" type="button" id="resetBtn">重置</button>
+          </div>
+        `;
+      }
+
+      document.getElementById("searchBtn").onclick = () => toast("已按条件搜索（原型）");
+      document.getElementById("resetBtn").onclick = () => toast("筛选条件已重置（原型）");
+    }
+
+    function formatCell(col, row) {
+      const raw = row[col.key] ?? "-";
+      if (col.kind === "pos") {
+        const n = Number(String(raw).replace(/,/g, ""));
+        const cls = n < 0 ? "amount-neg" : "amount-pos";
+        return `<span class="${cls}">${raw}</span>`;
+      }
+      if (col.kind === "neg") {
+        const text = String(raw).startsWith("-") ? raw : raw === "0.00" || raw === 0 ? "0.00" : `-${raw}`;
+        return `<span class="amount-neg">${text}</span>`;
+      }
+      if (col.kind === "status") {
+        const map = {
+          待打款: "status-pending",
+          已打款: "status-paid",
+          打款中: "status-in_transit",
+        };
+        const cls = map[raw] || "";
+        return `<span class="status ${cls}">${raw}</span>`;
+      }
+      return raw === "-" ? `<span class="muted">-</span>` : raw;
+    }
+
+    function renderTable() {
+      const isShopify = activePlatform === "ShopifyPayment";
+      const columns = isShopify ? shopifyColumns : legacyColumns;
+      const rows = isShopify ? shopifyMock : legacyMock[activePlatform] || [];
+
+      document.getElementById("tableHead").innerHTML =
+        `<tr>${columns.map((c) => `<th>${c.label}</th>`).join("")}</tr>`;
+
+      document.getElementById("tableBody").innerHTML = rows
+        .map((row) => `<tr>${columns.map((c) => `<td>${formatCell(c, row)}</td>`).join("")}</tr>`)
+        .join("");
+
+      document.getElementById("totalText").textContent = `共 ${rows.length} 条`;
+    }
+
+    function render() {
+      renderTabs();
+      renderFilters();
+      renderTable();
+    }
+
+    document.getElementById("syncBtn").onclick = () => {
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
+      const ts = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      lastSyncMap[activePlatform] = ts;
+      toast(`${activePlatform} 流水同步已触发（原型）`);
+    };
+
+    document.getElementById("exportBtn").onclick = () => toast(`正在导出 ${activePlatform} 数据（原型）`);
+    document.getElementById("lastSyncBtn").onclick = () =>
+      toast(`${activePlatform} 最近同步时间：${lastSyncMap[activePlatform]}`);
+
+    render();
+  </script>
+</body>
+</html>
