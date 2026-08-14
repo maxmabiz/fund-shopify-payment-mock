@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fund · 垫资交易明细 · ShopifyPayment</title>
+  <title>Fund · 垫资交易明细 · ShopifyPayments</title>
   <style>
     :root {
       --bg: #f0f2f5;
@@ -214,18 +214,6 @@
     .amount-neg { color: var(--danger); font-variant-numeric: tabular-nums; }
     .muted { color: var(--text-secondary); }
 
-    .status {
-      display: inline-block;
-      padding: 0 7px;
-      border-radius: 2px;
-      font-size: 12px;
-      line-height: 20px;
-      border: 1px solid transparent;
-    }
-    .status-pending { color: #d48806; background: #fffbe6; border-color: #ffe58f; }
-    .status-paid { color: #389e0d; background: #f6ffed; border-color: #b7eb8f; }
-    .status-in_transit { color: #096dd9; background: #e6f7ff; border-color: #91d5ff; }
-
     .pagination {
       display: flex;
       justify-content: flex-end;
@@ -325,8 +313,8 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const platforms = ["Airwallex", "PingPong", "PayPal", "OceanPayment", "ShopifyPayment"];
-    let activePlatform = "ShopifyPayment";
+    const platforms = ["Airwallex", "PingPong", "PayPal", "OceanPayment", "ShopifyPayments"];
+    let activePlatform = "ShopifyPayments";
 
     const legacyColumns = [
       { key: "platform", label: "支付平台" },
@@ -351,16 +339,9 @@
       { key: "amount", label: "交易金额", kind: "pos" },
       { key: "fee", label: "手续费", kind: "neg" },
       { key: "net", label: "净收入金额", kind: "pos" },
-      { key: "cardBrand", label: "卡品牌" },
-      { key: "cardSource", label: "支付来源" },
-      { key: "payoutStatus", label: "打款状态", kind: "status" },
-      { key: "payoutDate", label: "预计打款日期" },
-      { key: "payoutId", label: "打款批次ID" },
-      { key: "availableOn", label: "可用日期" },
-      { key: "checkout", label: "Checkout交易编号" },
-      { key: "paymentMethodName", label: "支付方式" },
-      { key: "presentmentAmount", label: "展示金额" },
-      { key: "presentmentCurrency", label: "展示币种" },
+      { key: "checkout", label: "交易ID" },
+      { key: "presentmentAmount", label: "付款金额" },
+      { key: "presentmentCurrency", label: "付款币种" },
     ];
 
     const legacyMock = {
@@ -436,169 +417,113 @@
 
     const shopifyMock = [
       {
-        platform: "shopify",
+        platform: "ShopifyPayments",
         alias: "Shopify-UK-主店",
         transactionDate: "2026-07-20 19:41:59 +0200",
         type: "charge",
         order: "#21880",
-        cardBrand: "visa",
-        cardSource: "online",
-        payoutStatus: "待打款",
-        payoutDate: "2026-07-27",
-        payoutId: "-",
-        availableOn: "2026-07-26",
         amount: "558.80",
         fee: "33.98",
         net: "524.82",
         checkout: "#33724244951097",
-        paymentMethodName: "card",
         presentmentAmount: "53.11",
         presentmentCurrency: "GBP",
         currency: "HKD",
       },
       {
-        platform: "shopify",
+        platform: "ShopifyPayments",
         alias: "Shopify-UK-主店",
         transactionDate: "2026-07-21 11:08:22 +0200",
         type: "charge",
         order: "#21891",
-        cardBrand: "master",
-        cardSource: "online",
-        payoutStatus: "打款中",
-        payoutDate: "2026-07-28",
-        payoutId: "po_9A1B2C3D",
-        availableOn: "2026-07-27",
         amount: "326.50",
         fee: "19.59",
         net: "306.91",
         checkout: "#33724245012884",
-        paymentMethodName: "card",
         presentmentAmount: "31.20",
         presentmentCurrency: "GBP",
         currency: "HKD",
       },
       {
-        platform: "shopify",
+        platform: "ShopifyPayments",
         alias: "Shopify-UK-主店",
         transactionDate: "2026-07-22 16:33:05 +0800",
         type: "refund",
         order: "#21855",
-        cardBrand: "visa",
-        cardSource: "online",
-        payoutStatus: "已打款",
-        payoutDate: "2026-07-24",
-        payoutId: "po_7F8E9D0C",
-        availableOn: "2026-07-23",
         amount: "-128.00",
         fee: "-3.84",
         net: "-124.16",
         checkout: "#33724243881201",
-        paymentMethodName: "card",
         presentmentAmount: "-12.20",
         presentmentCurrency: "GBP",
         currency: "HKD",
       },
       {
-        platform: "shopify",
+        platform: "ShopifyPayments",
         alias: "Shopify-US-Outlet",
         transactionDate: "2026-07-23 09:15:48 +0000",
         type: "charge",
         order: "#21902",
-        cardBrand: "amex",
-        cardSource: "online",
-        payoutStatus: "待打款",
-        payoutDate: "2026-07-30",
-        payoutId: "-",
-        availableOn: "2026-07-29",
         amount: "890.00",
         fee: "44.50",
         net: "845.50",
         checkout: "#33724246100377",
-        paymentMethodName: "card",
         presentmentAmount: "112.50",
         presentmentCurrency: "USD",
         currency: "HKD",
       },
       {
-        platform: "shopify",
+        platform: "ShopifyPayments",
         alias: "Shopify-UK-主店",
         transactionDate: "2026-07-24 21:02:11 +0200",
         type: "adjustment",
         order: "-",
-        cardBrand: "-",
-        cardSource: "-",
-        payoutStatus: "已打款",
-        payoutDate: "2026-07-25",
-        payoutId: "po_ADJ20260725",
-        availableOn: "2026-07-25",
         amount: "12.00",
         fee: "0.00",
         net: "12.00",
         checkout: "-",
-        paymentMethodName: "-",
         presentmentAmount: "12.00",
         presentmentCurrency: "HKD",
         currency: "HKD",
       },
       {
-        platform: "shopify",
+        platform: "ShopifyPayments",
         alias: "Shopify-US-Outlet",
         transactionDate: "2026-07-25 14:47:39 +0800",
         type: "charge",
         order: "#21918",
-        cardBrand: "visa",
-        cardSource: "online",
-        payoutStatus: "打款中",
-        payoutDate: "2026-08-01",
-        payoutId: "po_4K5L6M7N",
-        availableOn: "2026-07-31",
         amount: "215.60",
         fee: "12.94",
         net: "202.66",
         checkout: "#33724247221990",
-        paymentMethodName: "card",
         presentmentAmount: "198.00",
         presentmentCurrency: "CNY",
         currency: "HKD",
       },
       {
-        platform: "shopify",
+        platform: "ShopifyPayments",
         alias: "Shopify-UK-主店",
         transactionDate: "2026-07-26 08:19:03 +0200",
         type: "charge",
         order: "#21927",
-        cardBrand: "master",
-        cardSource: "online",
-        payoutStatus: "待打款",
-        payoutDate: "2026-08-02",
-        payoutId: "-",
-        availableOn: "2026-08-01",
         amount: "74.20",
         fee: "4.45",
         net: "69.75",
         checkout: "#33724248004412",
-        paymentMethodName: "card",
         presentmentAmount: "7.10",
         presentmentCurrency: "GBP",
         currency: "HKD",
       },
       {
-        platform: "shopify",
+        platform: "ShopifyPayments",
         alias: "Shopify-UK-主店",
         transactionDate: "2026-07-27 19:55:27 +0000",
         type: "refund",
         order: "#21891",
-        cardBrand: "master",
-        cardSource: "online",
-        payoutStatus: "已打款",
-        payoutDate: "2026-07-29",
-        payoutId: "po_9A1B2C3D",
-        availableOn: "2026-07-28",
         amount: "-56.00",
         fee: "-1.68",
         net: "-54.32",
         checkout: "#33724245012884",
-        paymentMethodName: "card",
         presentmentAmount: "-5.35",
         presentmentCurrency: "GBP",
         currency: "HKD",
@@ -610,7 +535,7 @@
       PingPong: "2026-08-10 13:10:22",
       PayPal: "2026-08-10 12:05:48",
       OceanPayment: "2026-08-10 11:40:16",
-      ShopifyPayment: "2026-08-10 15:18:33",
+      ShopifyPayments: "2026-08-10 15:18:33",
     };
 
     function toast(msg) {
@@ -639,7 +564,7 @@
 
     function renderFilters() {
       const grid = document.getElementById("filterGrid");
-      if (activePlatform === "ShopifyPayment") {
+      if (activePlatform === "ShopifyPayments") {
         grid.innerHTML = `
           <div class="field">
             <label>账户别名</label>
@@ -654,7 +579,7 @@
             <input type="text" placeholder="如 #21880" />
           </div>
           <div class="field">
-            <label>Checkout交易编号</label>
+            <label>交易ID</label>
             <input type="text" placeholder="请输入" />
           </div>
           <div class="field">
@@ -662,16 +587,8 @@
             <select><option value="">请选择</option><option>charge</option><option>refund</option><option>adjustment</option></select>
           </div>
           <div class="field">
-            <label>打款状态</label>
-            <select><option value="">请选择</option><option>待打款</option><option>打款中</option><option>已打款</option></select>
-          </div>
-          <div class="field">
             <label>结算币种</label>
             <select><option value="">请选择</option><option>HKD</option><option>USD</option><option>GBP</option></select>
-          </div>
-          <div class="field">
-            <label>支付方式</label>
-            <select><option value="">请选择</option><option>card</option></select>
           </div>
           <div class="field">
             <label>交易金额(最小金额)</label>
@@ -680,10 +597,6 @@
           <div class="field">
             <label>交易金额(最大金额)</label>
             <input type="text" placeholder="请输入" />
-          </div>
-          <div class="field">
-            <label>卡品牌</label>
-            <select><option value="">请选择</option><option>visa</option><option>master</option><option>amex</option></select>
           </div>
           <div class="field-actions">
             <button class="btn btn-primary" type="button" id="searchBtn">搜索</button>
@@ -754,20 +667,11 @@
         const text = String(raw).startsWith("-") ? raw : raw === "0.00" || raw === 0 ? "0.00" : `-${raw}`;
         return `<span class="amount-neg">${text}</span>`;
       }
-      if (col.kind === "status") {
-        const map = {
-          待打款: "status-pending",
-          已打款: "status-paid",
-          打款中: "status-in_transit",
-        };
-        const cls = map[raw] || "";
-        return `<span class="status ${cls}">${raw}</span>`;
-      }
       return raw === "-" ? `<span class="muted">-</span>` : raw;
     }
 
     function renderTable() {
-      const isShopify = activePlatform === "ShopifyPayment";
+      const isShopify = activePlatform === "ShopifyPayments";
       const columns = isShopify ? shopifyColumns : legacyColumns;
       const rows = isShopify ? shopifyMock : legacyMock[activePlatform] || [];
 
