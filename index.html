@@ -101,6 +101,19 @@
       align-items: end;
     }
 
+    .filter-extra {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px 24px;
+      align-items: end;
+      margin-top: 0;
+      grid-column: 1 / -1;
+    }
+
+    .filter-panel.collapsed .filter-extra {
+      display: none;
+    }
+
     .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
     .field label { color: var(--text); font-size: 14px; }
     .field input,
@@ -124,7 +137,22 @@
       align-items: flex-end;
       justify-content: flex-start;
       padding-bottom: 0;
+      height: 100%;
     }
+
+    .btn-expand {
+      border: none;
+      background: transparent;
+      color: var(--primary);
+      padding: 0 4px;
+      height: 32px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+    }
+    .btn-expand:hover { color: var(--primary-hover); }
 
     .btn {
       height: 32px;
@@ -253,7 +281,8 @@
     .toast.show { opacity: 1; }
 
     @media (max-width: 1200px) {
-      .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .filter-grid,
+      .filter-extra { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
   </style>
 </head>
@@ -277,8 +306,10 @@
       </div>
 
       <section class="card">
-        <div class="filter-grid" id="filterGrid">
-          <!-- filled by JS per tab -->
+        <div class="filter-panel collapsed" id="filterPanel">
+          <div class="filter-grid" id="filterGrid">
+            <!-- filled by JS per tab -->
+          </div>
         </div>
       </section>
 
@@ -315,6 +346,7 @@
   <script>
     const platforms = ["Airwallex", "PingPong", "PayPal", "OceanPayment", "ShopifyPayments"];
     let activePlatform = "ShopifyPayments";
+    let filtersExpanded = false;
 
     const legacyColumns = [
       { key: "platform", label: "支付平台" },
@@ -336,12 +368,15 @@
       { key: "transactionDate", label: "交易时间" },
       { key: "type", label: "交易类型" },
       { key: "currency", label: "结算币种" },
-      { key: "amount", label: "交易金额", kind: "pos" },
+      { key: "amount", label: "结算金额", kind: "pos" },
       { key: "fee", label: "手续费", kind: "neg" },
       { key: "net", label: "净收入金额", kind: "pos" },
       { key: "checkout", label: "交易ID" },
       { key: "presentmentAmount", label: "付款金额" },
       { key: "presentmentCurrency", label: "付款币种" },
+      { key: "bankReference", label: "银行参考号" },
+      { key: "settlementId", label: "结算ID" },
+      { key: "settlementStatus", label: "结算状态" },
     ];
 
     const legacyMock = {
@@ -420,113 +455,171 @@
         platform: "ShopifyPayments",
         alias: "Shopify-UK-主店",
         transactionDate: "2026-07-20 19:41:59 +0200",
-        type: "charge",
+        type: "CHARGE",
         order: "#21880",
         amount: "558.80",
         fee: "33.98",
         net: "524.82",
-        checkout: "#33724244951097",
+        checkout: "33724244951097",
         presentmentAmount: "53.11",
         presentmentCurrency: "GBP",
         currency: "HKD",
+        bankReference: "BNK20260720001",
+        settlementId: "stl_8F2A91C0",
+        settlementStatus: "PAID",
       },
       {
         platform: "ShopifyPayments",
         alias: "Shopify-UK-主店",
         transactionDate: "2026-07-21 11:08:22 +0200",
-        type: "charge",
+        type: "CHARGE",
         order: "#21891",
         amount: "326.50",
         fee: "19.59",
         net: "306.91",
-        checkout: "#33724245012884",
+        checkout: "33724245012884",
         presentmentAmount: "31.20",
         presentmentCurrency: "GBP",
         currency: "HKD",
+        bankReference: "BNK20260721008",
+        settlementId: "stl_1B7D44E2",
+        settlementStatus: "SCHEDULED",
       },
       {
         platform: "ShopifyPayments",
         alias: "Shopify-UK-主店",
         transactionDate: "2026-07-22 16:33:05 +0800",
-        type: "refund",
+        type: "REFUND",
         order: "#21855",
         amount: "-128.00",
         fee: "-3.84",
         net: "-124.16",
-        checkout: "#33724243881201",
+        checkout: "33724243881201",
         presentmentAmount: "-12.20",
         presentmentCurrency: "GBP",
         currency: "HKD",
+        bankReference: "BNK20260722015",
+        settlementId: "stl_9C3E10A7",
+        settlementStatus: "PAID",
       },
       {
         platform: "ShopifyPayments",
         alias: "Shopify-US-Outlet",
         transactionDate: "2026-07-23 09:15:48 +0000",
-        type: "charge",
+        type: "DISPUTE",
         order: "#21902",
-        amount: "890.00",
-        fee: "44.50",
-        net: "845.50",
-        checkout: "#33724246100377",
-        presentmentAmount: "112.50",
+        amount: "-890.00",
+        fee: "0.00",
+        net: "-890.00",
+        checkout: "33724246100377",
+        presentmentAmount: "-112.50",
         presentmentCurrency: "USD",
         currency: "HKD",
+        bankReference: "BNK20260723022",
+        settlementId: "stl_4D6F88B1",
+        settlementStatus: "FAILED",
       },
       {
         platform: "ShopifyPayments",
         alias: "Shopify-UK-主店",
         transactionDate: "2026-07-24 21:02:11 +0200",
-        type: "adjustment",
+        type: "ADJUSTMENT",
         order: "-",
         amount: "12.00",
         fee: "0.00",
         net: "12.00",
-        checkout: "-",
+        checkout: "33724246550112",
         presentmentAmount: "12.00",
         presentmentCurrency: "HKD",
         currency: "HKD",
-      },
-      {
-        platform: "ShopifyPayments",
-        alias: "Shopify-US-Outlet",
-        transactionDate: "2026-07-25 14:47:39 +0800",
-        type: "charge",
-        order: "#21918",
-        amount: "215.60",
-        fee: "12.94",
-        net: "202.66",
-        checkout: "#33724247221990",
-        presentmentAmount: "198.00",
-        presentmentCurrency: "CNY",
-        currency: "HKD",
+        bankReference: "BNK20260724031",
+        settlementId: "stl_2A5C77D9",
+        settlementStatus: "CANCELED",
       },
       {
         platform: "ShopifyPayments",
         alias: "Shopify-UK-主店",
-        transactionDate: "2026-07-26 08:19:03 +0200",
-        type: "charge",
-        order: "#21927",
-        amount: "74.20",
-        fee: "4.45",
-        net: "69.75",
-        checkout: "#33724248004412",
-        presentmentAmount: "7.10",
-        presentmentCurrency: "GBP",
+        transactionDate: "2026-07-25 11:20:33 +0200",
+        type: "ADJUSTMENT_REVERSAL",
+        order: "-",
+        amount: "-12.00",
+        fee: "0.00",
+        net: "-12.00",
+        checkout: "33724246881234",
+        presentmentAmount: "-12.00",
+        presentmentCurrency: "HKD",
         currency: "HKD",
+        bankReference: "BNK20260725038",
+        settlementId: "stl_2A5C77D9",
+        settlementStatus: "PAID",
+      },
+      {
+        platform: "ShopifyPayments",
+        alias: "Shopify-US-Outlet",
+        transactionDate: "2026-07-26 08:19:03 +0200",
+        type: "SYSTEM_ADJUSTMENT",
+        order: "-",
+        amount: "5.50",
+        fee: "0.00",
+        net: "5.50",
+        checkout: "33724247550001",
+        presentmentAmount: "5.50",
+        presentmentCurrency: "HKD",
+        currency: "HKD",
+        bankReference: "BNK20260726052",
+        settlementId: "stl_0F8A32C5",
+        settlementStatus: "PAID",
       },
       {
         platform: "ShopifyPayments",
         alias: "Shopify-UK-主店",
         transactionDate: "2026-07-27 19:55:27 +0000",
-        type: "refund",
+        type: "REFUND",
         order: "#21891",
         amount: "-56.00",
         fee: "-1.68",
         net: "-54.32",
-        checkout: "#33724245012884",
+        checkout: "33724245012884",
         presentmentAmount: "-5.35",
         presentmentCurrency: "GBP",
         currency: "HKD",
+        bankReference: "BNK20260727063",
+        settlementId: "stl_3B9D21E8",
+        settlementStatus: "PAID",
+      },
+      {
+        platform: "ShopifyPayments",
+        alias: "Shopify-UK-主店",
+        transactionDate: "2026-07-28 10:12:45 +0200",
+        type: "TRANSFER",
+        order: "-",
+        amount: "1200.00",
+        fee: "0.00",
+        net: "1200.00",
+        checkout: "33724248890123",
+        presentmentAmount: "1200.00",
+        presentmentCurrency: "HKD",
+        currency: "HKD",
+        bankReference: "BNK20260728071",
+        settlementId: "stl_7C1E54A2",
+        settlementStatus: "SCHEDULED",
+      },
+      {
+        platform: "ShopifyPayments",
+        alias: "Shopify-US-Outlet",
+        transactionDate: "2026-07-29 15:36:18 +0000",
+        type: "TRANSFER",
+        order: "-",
+        amount: "-350.00",
+        fee: "0.00",
+        net: "-350.00",
+        checkout: "33724249120456",
+        presentmentAmount: "-350.00",
+        presentmentCurrency: "HKD",
+        currency: "HKD",
+        bankReference: "BNK20260729082",
+        settlementId: "stl_5D2F63B9",
+        settlementStatus: "PAID",
       },
     ];
 
@@ -562,6 +655,28 @@
       });
     }
 
+    function bindFilterActions() {
+      document.getElementById("searchBtn").onclick = () => toast("已按条件搜索（原型）");
+      document.getElementById("resetBtn").onclick = () => toast("筛选条件已重置（原型）");
+      const expandBtn = document.getElementById("expandBtn");
+      if (expandBtn) {
+        expandBtn.onclick = () => {
+          filtersExpanded = !filtersExpanded;
+          applyFilterExpandState();
+        };
+      }
+    }
+
+    function applyFilterExpandState() {
+      const panel = document.getElementById("filterPanel");
+      const expandBtn = document.getElementById("expandBtn");
+      if (!panel) return;
+      panel.classList.toggle("collapsed", !filtersExpanded);
+      if (expandBtn) {
+        expandBtn.textContent = filtersExpanded ? "收起 ▲" : "展开 ▼";
+      }
+    }
+
     function renderFilters() {
       const grid = document.getElementById("filterGrid");
       if (activePlatform === "ShopifyPayments") {
@@ -578,29 +693,44 @@
             <label>Shopify订单号</label>
             <input type="text" placeholder="如 #21880" />
           </div>
-          <div class="field">
-            <label>交易ID</label>
-            <input type="text" placeholder="请输入" />
-          </div>
-          <div class="field">
-            <label>交易类型</label>
-            <select><option value="">请选择</option><option>charge</option><option>refund</option><option>adjustment</option></select>
-          </div>
-          <div class="field">
-            <label>结算币种</label>
-            <select><option value="">请选择</option><option>HKD</option><option>USD</option><option>GBP</option></select>
-          </div>
-          <div class="field">
-            <label>交易金额(最小金额)</label>
-            <input type="text" placeholder="请输入" />
-          </div>
-          <div class="field">
-            <label>交易金额(最大金额)</label>
-            <input type="text" placeholder="请输入" />
-          </div>
           <div class="field-actions">
             <button class="btn btn-primary" type="button" id="searchBtn">搜索</button>
             <button class="btn" type="button" id="resetBtn">重置</button>
+            <button class="btn-expand" type="button" id="expandBtn">展开 ▼</button>
+          </div>
+          <div class="filter-extra">
+            <div class="field">
+              <label>交易ID</label>
+              <input type="text" placeholder="请输入" />
+            </div>
+            <div class="field">
+              <label>交易类型</label>
+              <select><option value="">请选择</option><option>ADJUSTMENT</option><option>ADJUSTMENT_REVERSAL</option><option>CHARGE</option><option>DISPUTE</option><option>REFUND</option><option>SYSTEM_ADJUSTMENT</option><option>TRANSFER</option></select>
+            </div>
+            <div class="field">
+              <label>结算币种</label>
+              <select><option value="">请选择</option><option>HKD</option><option>USD</option><option>GBP</option></select>
+            </div>
+            <div class="field">
+              <label>结算金额(最小金额)</label>
+              <input type="text" placeholder="请输入" />
+            </div>
+            <div class="field">
+              <label>结算金额(最大金额)</label>
+              <input type="text" placeholder="请输入" />
+            </div>
+            <div class="field">
+              <label>银行参考号</label>
+              <input type="text" placeholder="请输入" />
+            </div>
+            <div class="field">
+              <label>结算ID</label>
+              <input type="text" placeholder="请输入" />
+            </div>
+            <div class="field">
+              <label>结算状态</label>
+              <select><option value="">请选择</option><option>CANCELED</option><option>FAILED</option><option>PAID</option><option>SCHEDULED</option></select>
+            </div>
           </div>
         `;
       } else {
@@ -617,43 +747,46 @@
             <label>交易ID</label>
             <input type="text" placeholder="请输入" />
           </div>
-          <div class="field">
-            <label>交易金额(最小金额)</label>
-            <input type="text" placeholder="请输入" />
-          </div>
-          <div class="field">
-            <label>交易金额(最大金额)</label>
-            <input type="text" placeholder="请输入" />
-          </div>
-          <div class="field">
-            <label>交易币种</label>
-            <select><option value="">请选择</option><option>USD</option><option>EUR</option><option>HKD</option></select>
-          </div>
-          <div class="field">
-            <label>付款方名称</label>
-            <input type="text" placeholder="请输入" />
-          </div>
-          <div class="field">
-            <label>付款方账号</label>
-            <input type="text" placeholder="请输入" />
-          </div>
-          <div class="field">
-            <label>类型</label>
-            <select><option value="">请选择</option></select>
-          </div>
-          <div class="field">
-            <label>二级类型</label>
-            <select><option value="">请选择</option></select>
-          </div>
           <div class="field-actions">
             <button class="btn btn-primary" type="button" id="searchBtn">搜索</button>
             <button class="btn" type="button" id="resetBtn">重置</button>
+            <button class="btn-expand" type="button" id="expandBtn">展开 ▼</button>
+          </div>
+          <div class="filter-extra">
+            <div class="field">
+              <label>交易金额(最小金额)</label>
+              <input type="text" placeholder="请输入" />
+            </div>
+            <div class="field">
+              <label>交易金额(最大金额)</label>
+              <input type="text" placeholder="请输入" />
+            </div>
+            <div class="field">
+              <label>交易币种</label>
+              <select><option value="">请选择</option><option>USD</option><option>EUR</option><option>HKD</option></select>
+            </div>
+            <div class="field">
+              <label>付款方名称</label>
+              <input type="text" placeholder="请输入" />
+            </div>
+            <div class="field">
+              <label>付款方账号</label>
+              <input type="text" placeholder="请输入" />
+            </div>
+            <div class="field">
+              <label>类型</label>
+              <select><option value="">请选择</option></select>
+            </div>
+            <div class="field">
+              <label>二级类型</label>
+              <select><option value="">请选择</option></select>
+            </div>
           </div>
         `;
       }
 
-      document.getElementById("searchBtn").onclick = () => toast("已按条件搜索（原型）");
-      document.getElementById("resetBtn").onclick = () => toast("筛选条件已重置（原型）");
+      bindFilterActions();
+      applyFilterExpandState();
     }
 
     function formatCell(col, row) {
